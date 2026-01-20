@@ -8,6 +8,9 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.api.router import api_router
 from app.clients.mongo import mongo_client
 from app.core.config import settings
+from app.repositories.telegram_login_session import (
+    TelegramLoginSessionRepository,
+)
 from app.repositories.user import UserRepository
 from app.services.users import hash_password
 
@@ -27,6 +30,9 @@ async def lifespan(_: FastAPI):
                     "password_hash": password_hash,
                 }
             )
+    db = mongo_client.connect()
+    tg_repo = TelegramLoginSessionRepository(db)
+    await tg_repo.ensure_indexes()
     try:
         yield
     finally:
