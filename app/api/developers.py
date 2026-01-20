@@ -122,3 +122,22 @@ async def delete_developers(
         not_found_ids=[],
         invalid_ids=[],
     )
+
+
+@router.delete("/{developer_id}", status_code=204)
+async def delete_developer(
+    developer_id: str,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+) -> None:
+    if not ObjectId.is_valid(developer_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Некорректный идентификатор",
+        )
+    repo = DeveloperRepository(db)
+    deleted = await repo.delete_by_id(developer_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=404,
+            detail="Разработчик не найден",
+        )
