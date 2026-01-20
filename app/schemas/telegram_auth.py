@@ -10,7 +10,7 @@ class TelegramQRRequest(BaseModel):
 class TelegramQRResponse(BaseModel):
     login_token: str
     expires_in: int
-    qr_png_base64: str
+    url: str
 
 
 class TelegramStatusResponse(BaseModel):
