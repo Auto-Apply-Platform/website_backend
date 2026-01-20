@@ -40,6 +40,20 @@ class BaseRepository:
         result = await self._collection.delete_one({"_id": ObjectId(item_id)})
         return result.deleted_count == 1
 
-    async def list(self, limit: int = 50) -> list[dict[str, Any]]:
-        cursor = self._collection.find().limit(limit)
+    async def list(
+        self,
+        *,
+        skip: int = 0,
+        limit: int = 50,
+        sort: list[tuple[str, int]] | None = None,
+        filters: dict[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
+        query = filters or {}
+        cursor = self._collection.find(query).skip(skip).limit(limit)
+        if sort:
+            cursor = cursor.sort(sort)
         return [serialize_document(doc) async for doc in cursor]
+
+    async def count(self, filters: dict[str, Any] | None = None) -> int:
+        query = filters or {}
+        return await self._collection.count_documents(query)

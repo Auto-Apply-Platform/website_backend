@@ -28,3 +28,20 @@ class DeveloperUpdate(BaseModel):
     grade: str | None = None
     resume_path: str | None = None
     parsing_status: str | None = None
+
+
+class DeveloperDeletePayload(BaseModel):
+    ids: list[str]
+
+
+class DeveloperDeleteResponse(BaseModel):
+    delete_ids: list[str]
+    not_found_ids: list[str]
+    invalid_ids: list[str]
+
+
+class DeveloperListResponse(BaseModel):
+    items: list[DeveloperInDB]
+    total: int
+    page: int
+    size: int
