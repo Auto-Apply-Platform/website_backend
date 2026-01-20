@@ -23,13 +23,12 @@ docker compose -f ../infra/docker-compose.yml up --build
 ## Переменные окружения (.env)
 
 Обязательные:
-- `JWT_SECRET` — секрет для подписи JWT.
+- `AUTH_JWT_SECRET` — секрет для подписи JWT.
 - `MONGODB_URI` — строка подключения к MongoDB.
 - `MONGODB_DB` — имя базы данных.
-
-Рекомендуемые:
-- `ADMIN_USERNAME` — логин администратора, который создаётся при первом запуске.
-- `ADMIN_PASSWORD` — пароль администратора.
+- `TELEGRAM_BOT_USERNAME` — username бота без `@`.
+- `TELEGRAM_BOT_SECRET` — секрет для подтверждения webhook-запросов от бота.
+- `TG_WHITELIST` — список Telegram user id через запятую.
 
 Пример `.env`:
 
@@ -37,20 +36,17 @@ docker compose -f ../infra/docker-compose.yml up --build
 APP_NAME=website_backend
 MONGODB_URI=mongodb://mongo:27017
 MONGODB_DB=website_backend
-JWT_SECRET=change_me
-JWT_ALGORITHM=HS256
-JWT_EXPIRE_MINUTES=60
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=pass123@
+AUTH_JWT_SECRET=change_me
+AUTH_JWT_ALG=HS256
+ACCESS_TOKEN_EXPIRES_SECONDS=3600
+LOGIN_TOKEN_TTL_SECONDS=300
+TELEGRAM_BOT_USERNAME=example_bot
+TELEGRAM_BOT_SECRET=change_me
+TG_WHITELIST=123,456
 ```
 
 ## Проверка
 
 - `GET /health` — публичный статус сервиса.
-- `POST /auth/login` — логин по JSON:
-
-```bash
-curl -X POST http://localhost:5000/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"pass123@"}'
-```
+- `POST /auth/telegram/qr` — получить QR для входа.
+- `GET /auth/telegram/status?login_token=...` — проверить статус логина.

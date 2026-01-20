@@ -8,3 +8,4 @@ bcrypt==3.2.2
 python-dotenv==1.0.1
 python-multipart==0.0.9
 PyJWT==2.8.0
+qrcode[pil]==7.4.2
