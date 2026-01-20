@@ -1,11 +1,8 @@
-import base64
-import io
 import uuid
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Body, Depends, Header, HTTPException
 from motor.motor_asyncio import AsyncIOMotorDatabase
-import qrcode
 
 from app.core.config import settings
 from app.dependencies import get_db
@@ -22,18 +19,9 @@ from app.services.auth import create_access_token
 router = APIRouter(prefix="/auth/telegram", tags=["auth"])
 
 
-def _generate_qr_base64(data: str) -> str:
-    qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M)
-    qr.add_data(data)
-    img = qr.make_image(fill_color="black", back_color="white")
-    buffer = io.BytesIO()
-    img.save(buffer, format="PNG")
-    return base64.b64encode(buffer.getvalue()).decode("ascii")
-
-
 @router.post("/qr", response_model=TelegramQRResponse)
 async def create_qr(
-    payload: TelegramQRRequest,
+    payload: TelegramQRRequest | None = Body(default=None),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ) -> TelegramQRResponse:
     if not settings.telegram_bot_username:
@@ -45,6 +33,7 @@ async def create_qr(
     expires_at = datetime.utcnow() + timedelta(
         seconds=settings.login_token_ttl_seconds,
     )
+    redirect_url = payload.redirect_url if payload else None
     session = {
         "_id": login_token,
         "status": "PENDING",
@@ -53,18 +42,17 @@ async def create_qr(
         "expires_at": expires_at,
         "consumed": False,
         "denied_reason": None,
-        "redirect_url": payload.redirect_url,
+        "redirect_url": redirect_url,
     }
     repo = TelegramLoginSessionRepository(db)
     await repo.create_session(session)
     deep_link = (
         f"https://t.me/{settings.telegram_bot_username}?start={login_token}"
     )
-    qr_base64 = _generate_qr_base64(deep_link)
     return TelegramQRResponse(
         login_token=login_token,
         expires_in=settings.login_token_ttl_seconds,
-        qr_png_base64=qr_base64,
+        url=deep_link,
     )
 
 
@@ -150,3 +138,4 @@ async def confirm(
         },
     )
     return TelegramConfirmResponse(status="APPROVED")
+    redirect_url = payload.redirect_url if payload else None
