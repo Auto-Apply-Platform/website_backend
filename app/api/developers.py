@@ -84,6 +84,26 @@ async def create_developer(
     return await repo.create(payload)
 
 
+@router.get("/{developer_id}", response_model=DeveloperInDB)
+async def get_developer(
+    developer_id: str,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+) -> dict[str, object]:
+    if not ObjectId.is_valid(developer_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Некорректный идентификатор",
+        )
+    repo = DeveloperRepository(db)
+    developer = await repo.get_by_id(developer_id)
+    if not developer:
+        raise HTTPException(
+            status_code=404,
+            detail="Разработчик не найден",
+        )
+    return developer
+
+
 @router.post("/delete", response_model=DeveloperDeleteResponse)
 async def delete_developers(
     payload: DeveloperDeletePayload,
