@@ -11,25 +11,11 @@ from app.core.config import settings
 from app.repositories.telegram_login_session import (
     TelegramLoginSessionRepository,
 )
-from app.repositories.user import UserRepository
-from app.services.users import hash_password
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     mongo_client.connect()
-    if settings.admin_username and settings.admin_password:
-        db = mongo_client.connect()
-        repo = UserRepository(db)
-        existing = await repo.get_by_username(settings.admin_username)
-        if not existing:
-            password_hash = hash_password(settings.admin_password)
-            await repo.create(
-                {
-                    "username": settings.admin_username,
-                    "password_hash": password_hash,
-                }
-            )
     db = mongo_client.connect()
     tg_repo = TelegramLoginSessionRepository(db)
     await tg_repo.ensure_indexes()

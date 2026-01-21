@@ -1,4 +1,5 @@
 from pathlib import Path
+from uuid import uuid4
 
 from fastapi import UploadFile
 
@@ -11,9 +12,23 @@ async def save_upload(upload: UploadFile, uploads_dir: str) -> str:
     suffix = Path(filename).suffix.lower()
     if suffix not in {".pdf", ".docx"}:
         raise ValueError("Разрешены только файлы .pdf или .docx")
-    file_path = Path(uploads_dir) / filename
+    unique_name = f"{uuid4().hex}{suffix}"
+    file_path = Path(uploads_dir) / unique_name
     contents = await upload.read()
     if not contents:
         raise ValueError("Файл резюме обязателен")
     file_path.write_bytes(contents)
-    return f"/{Path(uploads_dir).name}/{filename}"
+    return f"/{Path(uploads_dir).name}/{unique_name}"
+
+
+def delete_upload(resume_path: str | None, uploads_dir: str) -> None:
+    if not resume_path:
+        return
+    filename = Path(resume_path).name
+    if not filename:
+        return
+    file_path = Path(uploads_dir) / filename
+    try:
+        file_path.unlink()
+    except FileNotFoundError:
+        return
