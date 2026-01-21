@@ -22,7 +22,7 @@ from app.schemas.developer import (
     DeveloperInDB,
     DeveloperListResponse,
 )
-from app.utils.files import save_upload
+from app.utils.files import delete_upload, save_upload
 from app.core.config import settings
 
 router = APIRouter(prefix="/developers", tags=["developers"])
@@ -123,6 +123,20 @@ async def delete_developers(
         if not ObjectId.is_valid(developer_id):
             invalid_ids.append(developer_id)
             continue
+        developer = await repo.get_by_id(developer_id)
+        if not developer:
+            not_found_ids.append(developer_id)
+            continue
+        try:
+            delete_upload(
+                developer.get("resume_path"),
+                settings.uploads_dir,
+            )
+        except OSError as exc:
+            raise HTTPException(
+                status_code=500,
+                detail="Не удалось удалить файл резюме",
+            ) from exc
         deleted = await repo.delete_by_id(developer_id)
         if deleted:
             deleted_ids.append(developer_id)
@@ -155,6 +169,22 @@ async def delete_developer(
             detail="Некорректный идентификатор",
         )
     repo = DeveloperRepository(db)
+    developer = await repo.get_by_id(developer_id)
+    if not developer:
+        raise HTTPException(
+            status_code=404,
+            detail="Разработчик не найден",
+        )
+    try:
+        delete_upload(
+            developer.get("resume_path"),
+            settings.uploads_dir,
+        )
+    except OSError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail="Не удалось удалить файл резюме",
+        ) from exc
     deleted = await repo.delete_by_id(developer_id)
     if not deleted:
         raise HTTPException(
