@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     app_name: str = "website_backend"
     mongodb_uri: str = "mongodb://mongo:27017"
     mongodb_db: str = "website_backend"
+    redis_url: str = "redis://redis:6379/0"
     uploads_dir: str = "uploads"
     auth_jwt_secret: str = "change_me"
     auth_jwt_alg: str = "HS256"

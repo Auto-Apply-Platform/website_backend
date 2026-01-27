@@ -26,6 +26,7 @@ docker compose -f ../infra/docker-compose.yml up --build
 - `AUTH_JWT_SECRET` — секрет для подписи JWT.
 - `MONGODB_URI` — строка подключения к MongoDB.
 - `MONGODB_DB` — имя базы данных.
+- `REDIS_URL` — адрес Redis для очередей.
 - `TELEGRAM_BOT_USERNAME` — username бота без `@`.
 - `TELEGRAM_BOT_SECRET` — секрет для подтверждения webhook-запросов от бота.
 
@@ -35,6 +36,7 @@ docker compose -f ../infra/docker-compose.yml up --build
 APP_NAME=website_backend
 MONGODB_URI=mongodb://mongo:27017
 MONGODB_DB=website_backend
+REDIS_URL=redis://redis:6379/0
 AUTH_JWT_SECRET=change_me
 AUTH_JWT_ALG=HS256
 ACCESS_TOKEN_EXPIRES_SECONDS=3600
