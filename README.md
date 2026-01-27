@@ -26,9 +26,9 @@ docker compose -f ../infra/docker-compose.yml up --build
 - `AUTH_JWT_SECRET` — секрет для подписи JWT.
 - `MONGODB_URI` — строка подключения к MongoDB.
 - `MONGODB_DB` — имя базы данных.
+- `REDIS_URL` — адрес Redis для очередей.
 - `TELEGRAM_BOT_USERNAME` — username бота без `@`.
 - `TELEGRAM_BOT_SECRET` — секрет для подтверждения webhook-запросов от бота.
-- `TG_WHITELIST` — список Telegram user id через запятую.
 
 Пример `.env`:
 
@@ -36,13 +36,13 @@ docker compose -f ../infra/docker-compose.yml up --build
 APP_NAME=website_backend
 MONGODB_URI=mongodb://mongo:27017
 MONGODB_DB=website_backend
+REDIS_URL=redis://redis:6379/0
 AUTH_JWT_SECRET=change_me
 AUTH_JWT_ALG=HS256
 ACCESS_TOKEN_EXPIRES_SECONDS=3600
 LOGIN_TOKEN_TTL_SECONDS=300
 TELEGRAM_BOT_USERNAME=example_bot
 TELEGRAM_BOT_SECRET=change_me
-TG_WHITELIST=123,456
 ```
 
 ## Проверка

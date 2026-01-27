@@ -2,9 +2,11 @@ import logging
 from datetime import datetime, timezone
 from pathlib import Path
 
+import json
+import uuid
+
 from fastapi import (
     APIRouter,
-    BackgroundTasks,
     Depends,
     File,
     HTTPException,
@@ -13,6 +15,7 @@ from fastapi import (
 )
 from fastapi.responses import FileResponse
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from redis.asyncio import Redis
 from bson import ObjectId
 
 from app.consts import DEFAULT_PAGE_SIZE
@@ -36,7 +39,6 @@ from app.utils.files import (
     save_upload,
 )
 from app.core.config import settings
-from app.services.developer_parsing import run_resume_parsing
 from app.services.resume_parser import determine_parsing_status
 
 router = APIRouter(prefix="/developers", tags=["developers"])
@@ -48,6 +50,7 @@ ALLOWED_CONTENT_TYPES = {
     "application/pdf",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 }
+QUEUE_RESUME_INGEST = "queue:resume_ingest"
 
 
 @router.get("", response_model=DeveloperListResponse)
@@ -109,7 +112,6 @@ async def list_developers(
 
 @router.post("", response_model=DeveloperUploadResponse, status_code=201)
 async def create_developer(
-    background_tasks: BackgroundTasks,
     resume: list[UploadFile] = File(...),
     db: AsyncIOMotorDatabase = Depends(get_db),
 ) -> dict[str, object]:
@@ -160,7 +162,29 @@ async def create_developer(
             status_code=500,
             detail="Не удалось создать запись резюме",
         )
-    background_tasks.add_task(run_resume_parsing, developer_id, saved_path, db)
+    task = {
+        "task_id": str(uuid.uuid4()),
+        "source": "website_upload",
+        "file_path": str(saved_path),
+        "meta": {
+            "developer_id": developer_id,
+            "resume_path": resume_path,
+        },
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    redis = Redis.from_url(settings.redis_url, decode_responses=True)
+    try:
+        await redis.rpush(QUEUE_RESUME_INGEST, json.dumps(task))
+        logger.info(
+            "Resume task enqueued: developer_id=%s queue=%s redis_url=%s",
+            developer_id,
+            QUEUE_RESUME_INGEST,
+            settings.redis_url,
+        )
+    except Exception as exc:
+        logger.error("Failed to enqueue resume task: %s", exc)
+    finally:
+        await redis.close()
     return {
         "id": developer_id,
         "resume_path": resume_path,
