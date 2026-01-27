@@ -5,6 +5,7 @@ from app.repositories.base import BaseRepository
 class RequestRepository(BaseRepository):
     collection_name = REQUESTS_COLLECTION
 
-    async def list_requests(self) -> list[dict]:
-        cursor = self._collection.find({}).sort("created_at", -1)
+    async def list_requests(self, filters: dict | None = None) -> list[dict]:
+        query = filters or {}
+        cursor = self._collection.find(query)
         return [doc async for doc in cursor]
