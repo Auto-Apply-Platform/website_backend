@@ -112,8 +112,7 @@ async def confirm(
         )
     if session.get("status") == "APPROVED":
         return TelegramConfirmResponse(status="APPROVED")
-    allowed = payload.telegram_user_id in settings.tg_whitelist_set
-    if not allowed:
+    if not payload.allowed:
         await repo.update_by_token(
             payload.login_token,
             {

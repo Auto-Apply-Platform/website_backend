@@ -28,7 +28,6 @@ docker compose -f ../infra/docker-compose.yml up --build
 - `MONGODB_DB` — имя базы данных.
 - `TELEGRAM_BOT_USERNAME` — username бота без `@`.
 - `TELEGRAM_BOT_SECRET` — секрет для подтверждения webhook-запросов от бота.
-- `TG_WHITELIST` — список Telegram user id через запятую.
 
 Пример `.env`:
 
@@ -42,7 +41,6 @@ ACCESS_TOKEN_EXPIRES_SECONDS=3600
 LOGIN_TOKEN_TTL_SECONDS=300
 TELEGRAM_BOT_USERNAME=example_bot
 TELEGRAM_BOT_SECRET=change_me
-TG_WHITELIST=123,456
 ```
 
 ## Проверка
