@@ -8,6 +8,9 @@ class RequestRepository(BaseRepository):
     async def get_request_by_id(self, request_id: str) -> dict | None:
         return await self.get_by_id(request_id)
 
+    async def delete_request_by_id(self, request_id: str) -> bool:
+        return await self.delete_by_id(request_id)
+
     async def list_requests(self, filters: dict | None = None) -> list[dict]:
         query = filters or {}
         cursor = self._collection.find(query)

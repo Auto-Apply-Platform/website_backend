@@ -1,11 +1,19 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 from app.dependencies import get_db
-from app.schemas.request import RequestInDB, RequestStatusPatch, RequestStatusResponse
+from bson import ObjectId
+
+from app.schemas.request import (
+    RequestDeleteResponse,
+    RequestInDB,
+    RequestStatusPatch,
+    RequestStatusResponse,
+)
 from app.services.requests import (
+    delete_request_by_id,
     get_request_by_id,
     list_requests as list_requests_service,
     update_request_status,
@@ -35,6 +43,19 @@ async def get_request(
     db: AsyncIOMotorDatabase = Depends(get_db),
 ) -> RequestInDB:
     return await get_request_by_id(db, request_id=request_id)
+
+
+@router.delete("/{request_id}", response_model=RequestDeleteResponse)
+async def delete_request(
+    request_id: str,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+) -> RequestDeleteResponse:
+    if not ObjectId.is_valid(request_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Некорректный идентификатор",
+        )
+    return await delete_request_by_id(db, request_id=request_id)
 
 
 @router.patch(
