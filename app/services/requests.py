@@ -11,7 +11,12 @@ from app.schemas.request import (
     RequestStatusResponse,
 )
 from app.schemas.request_status import RequestStatus
-from app.services.request_status import can_transition, is_cancel_status, stage
+from app.services.request_status import (
+    can_transition,
+    is_cancel_status,
+    next_available_statuses,
+    stage,
+)
 from app.utils.mongo import serialize_document
 
 
@@ -123,12 +128,24 @@ async def update_request_status(
         update_payload["on_hold"] = bool(on_hold)
 
     if not update_payload:
-        return RequestStatusResponse.model_validate(serialize_document(request))
+        response = RequestStatusResponse.model_validate(serialize_document(request))
+        if response.status is not None:
+            response.next_available = next_available_statuses(
+                response.status,
+                max_stage=response.max_stage,
+            )
+        return response
 
     updated = await repo.update_by_id(request_id, update_payload)
     if not updated:
         raise HTTPException(status_code=404, detail="Заявка не найдена")
-    return RequestStatusResponse.model_validate(serialize_document(updated))
+    response = RequestStatusResponse.model_validate(serialize_document(updated))
+    if response.status is not None:
+        response.next_available = next_available_statuses(
+            response.status,
+            max_stage=response.max_stage,
+        )
+    return response
 
 
 async def backfill_request_status_fields(db: AsyncIOMotorDatabase) -> int:

@@ -39,8 +39,14 @@ TRANSITIONS = {
     RequestStatus.DETAILS_CLARIFICATION: {RequestStatus.CLIENT_REVIEW},
     RequestStatus.CLIENT_REVIEW: {RequestStatus.PRECHECK, RequestStatus.INTERVIEW_1},
     RequestStatus.PRECHECK: {RequestStatus.INTERVIEW_1},
-    RequestStatus.INTERVIEW_1: {RequestStatus.INTERVIEW_2},
-    RequestStatus.INTERVIEW_2: {RequestStatus.INTERVIEW_3},
+    RequestStatus.INTERVIEW_1: {
+        RequestStatus.INTERVIEW_2,
+        RequestStatus.WAIT_DECISION
+    },
+    RequestStatus.INTERVIEW_2: {
+        RequestStatus.INTERVIEW_3,
+        RequestStatus.WAIT_DECISION
+    },
     RequestStatus.INTERVIEW_3: {RequestStatus.WAIT_DECISION},
     RequestStatus.WAIT_DECISION: {RequestStatus.ON_PROJECT},
 }
@@ -93,3 +99,29 @@ def can_transition(
     if target in allowed:
         return TransitionCheck(True)
     return TransitionCheck(False, "transition not allowed")
+
+
+def next_available_statuses(
+    current: RequestStatus,
+    *,
+    max_stage: int,
+) -> list[RequestStatus]:
+    if is_terminal(current):
+        return []
+
+    next_statuses: set[RequestStatus] = set()
+
+    if is_cancel_status(current):
+        for status in PIPELINE:
+            if status == RequestStatus.ON_PROJECT:
+                continue
+            if stage(status) <= max_stage:
+                next_statuses.add(status)
+        return sorted(next_statuses, key=lambda item: stage(item))
+
+    allowed = TRANSITIONS.get(current, set())
+    next_statuses.update(allowed)
+    next_statuses.add(RequestStatus.CANCELLED_BY_US)
+    next_statuses.add(RequestStatus.REJECTED)
+
+    return sorted(next_statuses, key=lambda item: stage(item) if stage(item) >= 0 else 999)
