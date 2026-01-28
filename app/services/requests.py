@@ -20,6 +20,7 @@ async def list_requests(
     *,
     role: str | None = None,
     grade: str | None = None,
+    work_format: str | None = None,
     has_deadline: bool | None = None,
 ) -> list[RequestInDB]:
     repo = RequestRepository(db)
@@ -28,6 +29,8 @@ async def list_requests(
         filters["vacancy.role"] = role
     if grade:
         filters["vacancy.grade"] = grade
+    if work_format:
+        filters["vacancy.work_format"] = work_format
     if has_deadline is True:
         filters["vacancy.application_deadline"] = {"$exists": True, "$ne": ""}
     elif has_deadline is False:

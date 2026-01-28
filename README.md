@@ -47,6 +47,5 @@ TELEGRAM_BOT_SECRET=change_me
 
 ## Проверка
 
-- `GET /health` — публичный статус сервиса.
 - `POST /auth/telegram/qr` — получить login_token и URL для QR.
 - `GET /auth/telegram/status?login_token=...` — проверить статус логина.

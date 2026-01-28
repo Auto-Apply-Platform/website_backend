@@ -97,7 +97,7 @@ class DeveloperListItem(BaseModel):
     parsing_status: str
     created_at: str
     grade: str
-    working_format: str
+    work_format: str
 
 
 class DeveloperListResponse(BaseModel):
