@@ -27,12 +27,14 @@ async def list_requests(
     db: AsyncIOMotorDatabase = Depends(get_db),
     role: str | None = Query(None),
     grade: str | None = Query(None),
+    work_format: str | None = Query(None),
     has_deadline: bool | None = Query(None),
-) -> list[dict]:
+) -> list[RequestInDB]:
     return await list_requests_service(
         db,
         role=role,
         grade=grade,
+        work_format=work_format,
         has_deadline=has_deadline,
     )
 
