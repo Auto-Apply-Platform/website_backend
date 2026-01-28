@@ -5,7 +5,11 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from fastapi import HTTPException, status
 
 from app.repositories.request import RequestRepository
-from app.schemas.request import RequestInDB, RequestStatusResponse
+from app.schemas.request import (
+    RequestDeleteResponse,
+    RequestInDB,
+    RequestStatusResponse,
+)
 from app.schemas.request_status import RequestStatus
 from app.services.request_status import can_transition, is_cancel_status, stage
 from app.utils.mongo import serialize_document
@@ -47,6 +51,18 @@ async def get_request_by_id(
     if not request:
         raise HTTPException(status_code=404, detail="Заявка не найдена")
     return RequestInDB.model_validate(serialize_document(request))
+
+
+async def delete_request_by_id(
+    db: AsyncIOMotorDatabase,
+    *,
+    request_id: str,
+) -> RequestDeleteResponse:
+    repo = RequestRepository(db)
+    deleted = await repo.delete_request_by_id(request_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Заявка не найдена")
+    return RequestDeleteResponse(id=request_id, deleted=True)
 
 
 async def update_request_status(

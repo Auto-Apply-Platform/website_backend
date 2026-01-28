@@ -64,6 +64,11 @@ class RequestStatusResponse(BaseModel):
     max_stage: int = 0
 
 
+class RequestDeleteResponse(BaseModel):
+    id: str
+    deleted: bool
+
+
 class RequestVacancyStack(BaseModel):
     model_config = ConfigDict(extra="allow")
 
