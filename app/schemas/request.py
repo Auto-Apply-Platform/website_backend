@@ -126,6 +126,7 @@ class RequestInDB(BaseModel):
     status: RequestStatus | None = None
     on_hold: bool = False
     max_stage: int = 0
+    next_available: list[RequestStatus] = Field(default_factory=list)
     vacancy: RequestVacancy | None = None
     meta: RequestMeta | None = None
     best_candidates: list[RequestBestCandidate] = Field(default_factory=list)

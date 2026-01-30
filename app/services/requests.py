@@ -46,7 +46,7 @@ async def list_requests(
         ]
 
     docs = await repo.list_requests(filters=filters)
-    return [RequestInDB.model_validate(serialize_document(doc)) for doc in docs]
+    return [_with_next_available(RequestInDB.model_validate(serialize_document(doc))) for doc in docs]
 
 
 async def get_request_by_id(
@@ -58,7 +58,7 @@ async def get_request_by_id(
     request = await repo.get_request_by_id(request_id)
     if not request:
         raise HTTPException(status_code=404, detail="Заявка не найдена")
-    return RequestInDB.model_validate(serialize_document(request))
+    return _with_next_available(RequestInDB.model_validate(serialize_document(request)))
 
 
 async def delete_request_by_id(
@@ -146,6 +146,16 @@ async def update_request_status(
             max_stage=response.max_stage,
         )
     return response
+
+
+def _with_next_available(request: RequestInDB) -> RequestInDB:
+    if request.status is None:
+        return request
+    request.next_available = next_available_statuses(
+        request.status,
+        max_stage=request.max_stage,
+    )
+    return request
 
 
 async def backfill_request_status_fields(db: AsyncIOMotorDatabase) -> int:

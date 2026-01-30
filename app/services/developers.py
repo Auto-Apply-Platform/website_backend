@@ -214,7 +214,22 @@ async def update_developer(
     updated = await repo.update_by_id(developer_id, update_data)
     if not updated:
         raise HTTPException(status_code=404, detail="Разработчик не найден")
-    return DeveloperInDB.model_validate(updated)
+    parsed = DeveloperInDB.model_validate(updated)
+    if parsed.parsing_status == "accepted":
+        task = {
+            "task_id": str(uuid.uuid4()),
+            "action": "match_only",
+            "meta": {
+                "developer_id": developer_id,
+            },
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        redis = Redis.from_url(settings.redis_url, decode_responses=True)
+        try:
+            await redis.rpush(QUEUE_RESUME_INGEST, json.dumps(task))
+        finally:
+            await redis.close()
+    return parsed
 
 
 async def get_developer_resume(
@@ -323,4 +338,3 @@ async def delete_developer(
     deleted = await repo.delete_by_id(developer_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Разработчик не найден")
-
