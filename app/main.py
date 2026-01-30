@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.router import api_router
+from app.repositories.role import RoleRepository
 from app.clients.mongo import mongo_client
 from app.core.config import settings
 from app.repositories.telegram_login_session import (
@@ -35,6 +36,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(api_router)
+
+
+@app.on_event("startup")
+async def startup() -> None:
+    db = mongo_client.connect()
+    repo = RoleRepository(db)
+    await repo.ensure_indexes()
 
 
 @app.exception_handler(StarletteHTTPException)

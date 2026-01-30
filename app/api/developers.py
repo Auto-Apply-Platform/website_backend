@@ -58,6 +58,10 @@ async def list_developers(
     )
 
 
+
+
+
+
 @router.post("", response_model=DeveloperUploadResponse, status_code=201)
 async def create_developer(
     resume: list[UploadFile] = File(...),
@@ -126,3 +130,4 @@ async def delete_developer(
         db,
         developer_id=developer_id,
     )
+

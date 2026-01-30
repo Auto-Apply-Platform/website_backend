@@ -105,3 +105,7 @@ class DeveloperListResponse(BaseModel):
     total: int
     page: int
     size: int
+
+
+class DeveloperOptionsResponse(BaseModel):
+    options: list[str]
