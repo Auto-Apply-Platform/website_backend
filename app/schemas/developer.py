@@ -54,18 +54,7 @@ class DeveloperUpdate(BaseModel):
 
 class DeveloperPatchPayload(BaseModel):
     full_name: str | None = None
-    role: Literal[
-        "Backend Developer",
-        "Frontend Developer",
-        "Fullstack Developer",
-        "Mobile Developer",
-        "Data Engineer",
-        "Data Analyst",
-        "Machine Learning Engineer",
-        "UI/UX designer",
-        "1С разработчик",
-        "Другое",
-    ] | None = None
+    role: str | None = None
     grade: Literal["Junior", "Middle", "Senior"] | None = None
     grade_raw: str | None = None
     experience_years: float | None = None

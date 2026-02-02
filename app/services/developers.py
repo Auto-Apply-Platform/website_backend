@@ -201,13 +201,12 @@ async def update_developer(
     update_data = payload.model_dump(exclude_unset=True)
     if "role" in update_data and update_data["role"] is not None:
         role_value = str(update_data["role"])
-        if role_value != "Другое":
-            exists = await role_exists(db, name=role_value)
-            if not exists:
-                raise HTTPException(
-                    status_code=422,
-                    detail="Роль не найдена в списке доступных",
-                )
+        exists = await role_exists(db, name=role_value)
+        if not exists:
+            raise HTTPException(
+                status_code=422,
+                detail="Роль не найдена в списке доступных",
+            )
     merged = {**developer, **update_data}
     parsing_status = await determine_parsing_status(merged)
     update_data["parsing_status"] = parsing_status
