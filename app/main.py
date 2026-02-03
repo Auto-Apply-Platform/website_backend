@@ -7,6 +7,8 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.router import api_router
+from app.repositories.candidate import CandidateRepository
+from app.repositories.response import ResponseRepository
 from app.repositories.role import RoleRepository
 from app.clients.mongo import mongo_client
 from app.core.config import settings
@@ -41,8 +43,12 @@ app.include_router(api_router)
 @app.on_event("startup")
 async def startup() -> None:
     db = mongo_client.connect()
-    repo = RoleRepository(db)
-    await repo.ensure_indexes()
+    role_repo = RoleRepository(db)
+    await role_repo.ensure_indexes()
+    response_repo = ResponseRepository(db)
+    await response_repo.ensure_indexes()
+    candidate_repo = CandidateRepository(db)
+    await candidate_repo.ensure_indexes()
 
 
 @app.exception_handler(StarletteHTTPException)

@@ -14,8 +14,6 @@ from redis.asyncio import Redis
 
 from app.repositories.developer import DeveloperRepository
 from app.schemas.developer import (
-    DeveloperDeletePayload,
-    DeveloperDeleteResponse,
     DeveloperInDB,
     DeveloperListItem,
     DeveloperListResponse,
@@ -81,6 +79,7 @@ async def list_developers(
         )
         full_name = developer.get("full_name") or ""
         role_value = developer.get("role") or ""
+        status_value = developer.get("status")
         grade_value = developer.get("grade")
         work_format_value = developer.get("work_format")
         parsing_status = developer.get("parsing_status") or ""
@@ -89,6 +88,7 @@ async def list_developers(
                 id=developer.get("id") or "",
                 full_name=full_name,
                 role=role_value,
+                status=status_value,
                 stack={
                     "core": stack.get("core") or [],
                     "additional": stack.get("additional") or [],
@@ -150,11 +150,13 @@ async def create_developer(
     except UploadValidationError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
-    created_at = datetime.now(timezone.utc).isoformat()
+    created_at = datetime.now(timezone.utc)
     payload = {
         "resume_path": resume_path,
         "parsing_status": "pending",
         "created_at": created_at,
+        "updated_at": created_at,
+        "status": "доступен",
     }
     repo = DeveloperRepository(db)
     created = await repo.create(payload)
@@ -199,6 +201,7 @@ async def update_developer(
     if not developer:
         raise HTTPException(status_code=404, detail="Разработчик не найден")
     update_data = payload.model_dump(exclude_unset=True)
+    update_data["updated_at"] = datetime.now(timezone.utc)
     if "role" in update_data and update_data["role"] is not None:
         role_value = str(update_data["role"])
         exists = await role_exists(db, name=role_value)
@@ -255,61 +258,6 @@ async def get_developer_resume(
     safe_name = full_name.replace("/", "_").replace("\\", "_") if full_name else "resume"
     download_name = f"{safe_name}{extension}"
     return FileResponse(file_path, filename=download_name)
-
-
-async def delete_developers(
-    db: AsyncIOMotorDatabase,
-    *,
-    payload: DeveloperDeletePayload,
-) -> DeveloperDeleteResponse:
-    if not payload.ids:
-        raise HTTPException(
-            status_code=400,
-            detail="Список идентификаторов не должен быть пустым",
-        )
-    repo = DeveloperRepository(db)
-    deleted_ids: list[str] = []
-    not_found_ids: list[str] = []
-    invalid_ids: list[str] = []
-
-    for developer_id in payload.ids:
-        if not ObjectId.is_valid(developer_id):
-            invalid_ids.append(developer_id)
-            continue
-        developer = await repo.get_by_id(developer_id)
-        if not developer:
-            not_found_ids.append(developer_id)
-            continue
-        try:
-            delete_upload(
-                developer.get("resume_path"),
-                settings.uploads_dir,
-            )
-        except OSError as exc:
-            raise HTTPException(
-                status_code=500,
-                detail="Не удалось удалить файл резюме",
-            ) from exc
-
-        deleted = await repo.delete_by_id(developer_id)
-        if deleted:
-            deleted_ids.append(developer_id)
-        else:
-            not_found_ids.append(developer_id)
-
-    if invalid_ids or not_found_ids:
-        detail = {"invalid_ids": invalid_ids, "not_found_ids": not_found_ids}
-        if not invalid_ids:
-            detail.pop("invalid_ids")
-        if not not_found_ids:
-            detail.pop("not_found_ids")
-        raise HTTPException(status_code=400, detail=detail)
-
-    return DeveloperDeleteResponse(
-        delete_ids=deleted_ids,
-        not_found_ids=[],
-        invalid_ids=[],
-    )
 
 
 async def delete_developer(

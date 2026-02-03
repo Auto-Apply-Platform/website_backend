@@ -1,8 +1,9 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.request_status import RequestStatus
+from app.schemas.response_stage import ResponseStage
 
 
 class RequestCreate(BaseModel):
@@ -44,25 +45,6 @@ class RequestUpdate(BaseModel):
     additional_requirements: str | None = None
     other: str | None = None
     comment: str | None = None
-
-
-class RequestStatusPatch(BaseModel):
-    status: RequestStatus | None = None
-    on_hold: bool | None = None
-
-    @model_validator(mode="after")
-    def validate_payload(self) -> "RequestStatusPatch":
-        if self.status is None and self.on_hold is None:
-            raise ValueError("status or on_hold is required")
-        return self
-
-
-class RequestStatusResponse(BaseModel):
-    id: str
-    status: RequestStatus | None = None
-    on_hold: bool = False
-    max_stage: int = 0
-    next_available: list[RequestStatus] = Field(default_factory=list)
 
 
 class RequestDeleteResponse(BaseModel):
@@ -111,24 +93,51 @@ class RequestMeta(BaseModel):
     telegram: RequestMetaTelegram | None = None
 
 
-class RequestBestCandidate(BaseModel):
-    model_config = ConfigDict(extra="allow")
-
-    developer_id: str | None = None
-    score: int | float | None = None
-    matched_at: datetime | None = None
-
-
 class RequestInDB(BaseModel):
     model_config = ConfigDict(extra="allow")
 
     id: str
     status: RequestStatus | None = None
-    on_hold: bool = False
-    max_stage: int = 0
-    next_available: list[RequestStatus] = Field(default_factory=list)
+    name: str | None = None
     vacancy: RequestVacancy | None = None
     meta: RequestMeta | None = None
-    best_candidates: list[RequestBestCandidate] = Field(default_factory=list)
+    raw_text: str | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
+
+
+class RequestCandidateDeveloper(BaseModel):
+    id: str
+    full_name: str
+    role: str | None = None
+    grade: str | None = None
+    work_format: str | None = None
+
+
+class RequestCandidateItem(BaseModel):
+    developer: RequestCandidateDeveloper
+    score: float | None = None
+    description: str | None = None
+    already_assigned: bool = False
+
+
+class RequestResponseItem(BaseModel):
+    id: str
+    developer_id: str
+    rate: str | None = None
+    stage: ResponseStage
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class RequestDetailResponse(BaseModel):
+    id: str
+    status: RequestStatus | None = None
+    name: str | None = None
+    vacancy: RequestVacancy | None = None
+    meta: RequestMeta | None = None
+    raw_text: str | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    candidates: list[RequestCandidateItem] = Field(default_factory=list)
+    responses: list[RequestResponseItem] = Field(default_factory=list)
