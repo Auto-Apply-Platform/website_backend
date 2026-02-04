@@ -203,6 +203,10 @@ async def update_developer(
     if not developer:
         raise HTTPException(status_code=404, detail="Разработчик не найден")
     update_data = payload.model_dump(exclude_unset=True)
+    if "grade" in update_data and isinstance(update_data["grade"], str):
+        update_data["grade"] = update_data["grade"].strip().lower()
+    if "work_format" in update_data and isinstance(update_data["work_format"], str):
+        update_data["work_format"] = update_data["work_format"].strip().lower()
     update_data["updated_at"] = datetime.now(timezone.utc)
     if "role" in update_data and update_data["role"] is not None:
         role_value = str(update_data["role"])

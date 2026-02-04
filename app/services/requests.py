@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from fastapi import HTTPException
 
 from app.repositories.request import RequestRepository
+from app.repositories.audit_event import AuditEventRepository
 from app.schemas.request import (
     RequestDeleteResponse,
     RequestDetailResponse,
@@ -129,6 +130,51 @@ async def get_request_by_id(
         candidates=candidates,
         responses=responses,
     )
+
+
+async def update_request(
+    db: AsyncIOMotorDatabase,
+    *,
+    request_id: str,
+    status_value: RequestStatus | None,
+    name: str | None,
+) -> RequestDetailResponse:
+    repo = RequestRepository(db)
+    audit_repo = AuditEventRepository(db)
+    request = await repo.get_by_id(request_id)
+    if not request:
+        raise HTTPException(status_code=404, detail="Заявка не найдена")
+    current_status_raw = request.get("status")
+    current_status = None
+    if isinstance(current_status_raw, str):
+        try:
+            current_status = RequestStatus(current_status_raw)
+        except ValueError:
+            current_status = None
+    update_payload: dict[str, object] = {}
+    if status_value is not None:
+        update_payload["status"] = status_value.value
+    if name is not None:
+        update_payload["name"] = name
+    if update_payload:
+        update_payload["updated_at"] = datetime.now(timezone.utc)
+    updated = await repo.update_by_id(request_id, update_payload)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Заявка не найдена")
+    if status_value is not None:
+        await audit_repo.create(
+            {
+                "entity_type": "request",
+                "entity_id": request_id,
+                "action": "request_status_changed",
+                "payload_json": {
+                    "from": current_status.value if current_status else None,
+                    "to": status_value.value,
+                },
+                "created_at": datetime.now(timezone.utc),
+            }
+        )
+    return await get_request_by_id(db, request_id=request_id)
 
 
 async def delete_request_by_id(

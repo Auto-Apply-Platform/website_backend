@@ -1,6 +1,7 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+from typing import Literal
 
 from app.schemas.request_status import RequestStatus
 from app.schemas.response_stage import ResponseStage
@@ -59,12 +60,12 @@ class RequestVacancyStack(BaseModel):
 
 class RequestVacancy(BaseModel):
     role: str = ""
-    grade: str | None = None
+    grade: Literal["junior", "middle", "senior", "team_lead"] | None = None
     stack: RequestVacancyStack = Field(default_factory=RequestVacancyStack)
     experience_years: float | None = None
     rate: str = ""
     location: str = ""
-    work_format: str | None = None
+    work_format: Literal["remote", "office", "hybrid"] | None = None
     workload: str = ""
     payment_terms: str = ""
     project: str = ""
@@ -132,3 +133,14 @@ class RequestDetailResponse(BaseModel):
     updated_at: datetime | None = None
     candidates: list[RequestCandidateItem] = Field(default_factory=list)
     responses: list[RequestResponseItem] = Field(default_factory=list)
+
+
+class RequestPatchPayload(BaseModel):
+    status: RequestStatus | None = None
+    name: str | None = None
+
+    @model_validator(mode="after")
+    def validate_payload(self) -> "RequestPatchPayload":
+        if self.status is None and self.name is None:
+            raise ValueError("status or name is required")
+        return self

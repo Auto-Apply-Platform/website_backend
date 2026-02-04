@@ -54,10 +54,10 @@ class DeveloperPatchPayload(BaseModel):
     full_name: str | None = None
     role: str | None = None
     status: Literal["занят", "доступен", "нужна ротация"] | None = None
-    grade: Literal["Junior", "Middle", "Senior"] | None = None
+    grade: Literal["junior", "middle", "senior", "team_lead"] | None = None
     experience_years: float | None = None
     stack: DeveloperStack | None = None
-    work_format: Literal["Remote", "Hybrid", "Office"] | None = None
+    work_format: Literal["remote", "hybrid", "office"] | None = None
     location: str | None = None
     rate: str | None = None
     resume_text: str | None = None
