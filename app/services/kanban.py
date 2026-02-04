@@ -88,6 +88,7 @@ async def get_kanban(
                 "id": request_id,
                 "name": request.get("name"),
                 "status": request.get("status"),
+                "rate": vacancy.get("rate"),
                 "application_deadline": vacancy.get("application_deadline"),
                 "updated_at": request.get("updated_at"),
                 "responses_by_stage": {

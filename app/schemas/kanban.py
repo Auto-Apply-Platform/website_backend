@@ -18,6 +18,7 @@ class KanbanRequestItem(BaseModel):
     id: str
     name: str | None = None
     status: str | None = None
+    rate: str | None = None
     application_deadline: str | None = None
     updated_at: datetime | None = None
     responses_by_stage: dict[ResponseStage, list[KanbanResponseItem]] = Field(
