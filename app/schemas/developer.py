@@ -31,19 +31,15 @@ class DeveloperInDB(BaseModel):
     created_at: str | None = None
     updated_at: str | None = None
     full_name: str | None = None
-    main_stack: str | None = None
     role: str | None = None
     status: str | None = None
     grade: str | None = None
-    grade_raw: str | None = None
     experience_years: float | None = None
     stack: DeveloperStack | None = None
     work_format: str | None = None
-    employment_type: str | None = None
     location: str | None = None
-    salary_expectations: str | None = None
-    education_level: str | None = None
-    additional_information: str | None = None
+    rate: str | None = None
+    resume_text: str | None = None
 
 
 class DeveloperUpdate(BaseModel):
@@ -59,15 +55,12 @@ class DeveloperPatchPayload(BaseModel):
     role: str | None = None
     status: Literal["занят", "доступен", "нужна ротация"] | None = None
     grade: Literal["Junior", "Middle", "Senior"] | None = None
-    grade_raw: str | None = None
     experience_years: float | None = None
     stack: DeveloperStack | None = None
     work_format: Literal["Remote", "Hybrid", "Office"] | None = None
-    employment_type: str | None = None
     location: str | None = None
-    salary_expectations: str | None = None
-    education_level: str | None = None
-    additional_information: str | None = None
+    rate: str | None = None
+    resume_text: str | None = None
 
 
 class DeveloperListItem(BaseModel):
@@ -75,6 +68,7 @@ class DeveloperListItem(BaseModel):
     full_name: str
     role: str
     status: str | None = None
+    rate: str | None = None
     stack: DeveloperStack
     experience: float
     parsing_status: str

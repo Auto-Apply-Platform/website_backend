@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 from app.schemas.request_status import RequestStatus
 from app.schemas.response_stage import ResponseStage
@@ -15,14 +15,14 @@ class RequestCreate(BaseModel):
     grade: str | None = None
     technologies: str | None = None
     experience: str | None = None
-    requirements: str | None = None
-    responsibilities: str | None = None
     rate: str | None = None
-    duration: str | None = None
-    project: str | None = None
     location: str | None = None
-    additional_requirements: str | None = None
-    other: str | None = None
+    workload: str | None = None
+    payment_terms: str | None = None
+    project: str | None = None
+    partner: str | None = None
+    customer: str | None = None
+    external_id: str | None = None
     comment: str | None = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -36,14 +36,14 @@ class RequestUpdate(BaseModel):
     grade: str | None = None
     technologies: str | None = None
     experience: str | None = None
-    requirements: str | None = None
-    responsibilities: str | None = None
     rate: str | None = None
-    duration: str | None = None
-    project: str | None = None
     location: str | None = None
-    additional_requirements: str | None = None
-    other: str | None = None
+    workload: str | None = None
+    payment_terms: str | None = None
+    project: str | None = None
+    partner: str | None = None
+    customer: str | None = None
+    external_id: str | None = None
     comment: str | None = None
 
 
@@ -53,49 +53,40 @@ class RequestDeleteResponse(BaseModel):
 
 
 class RequestVacancyStack(BaseModel):
-    model_config = ConfigDict(extra="allow")
-
     required: list[str] = Field(default_factory=list)
     nice_to_have: list[str] = Field(default_factory=list)
 
 
 class RequestVacancy(BaseModel):
-    model_config = ConfigDict(extra="allow")
-
     role: str = ""
     grade: str | None = None
-    grade_raw: str = ""
     stack: RequestVacancyStack = Field(default_factory=RequestVacancyStack)
     experience_years: float | None = None
-    responsibilities: list[str] = Field(default_factory=list)
-    constraints: list[str] = Field(default_factory=list)
-    salary: str = ""
+    rate: str = ""
     location: str = ""
     work_format: str | None = None
-    duration: str = ""
+    workload: str = ""
+    payment_terms: str = ""
+    project: str = ""
+    partner: str = ""
+    customer: str = ""
+    external_id: str = ""
     application_deadline: str = ""
     contacts: list[str] = Field(default_factory=list)
-    additional_information: str = ""
 
 
 class RequestMetaTelegram(BaseModel):
-    model_config = ConfigDict(extra="allow")
-
     channel_id: int | None = None
     chat_id: int | None = None
     message_id: int | None = None
 
 
 class RequestMeta(BaseModel):
-    model_config = ConfigDict(extra="allow")
-
     source: str | None = None
     telegram: RequestMetaTelegram | None = None
 
 
 class RequestInDB(BaseModel):
-    model_config = ConfigDict(extra="allow")
-
     id: str
     status: RequestStatus | None = None
     name: str | None = None

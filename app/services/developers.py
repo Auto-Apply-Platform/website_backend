@@ -80,6 +80,7 @@ async def list_developers(
         full_name = developer.get("full_name") or ""
         role_value = developer.get("role") or ""
         status_value = developer.get("status")
+        rate_value = developer.get("rate")
         grade_value = developer.get("grade")
         work_format_value = developer.get("work_format")
         parsing_status = developer.get("parsing_status") or ""
@@ -89,6 +90,7 @@ async def list_developers(
                 full_name=full_name,
                 role=role_value,
                 status=status_value,
+                rate=rate_value,
                 stack={
                     "core": stack.get("core") or [],
                     "additional": stack.get("additional") or [],
