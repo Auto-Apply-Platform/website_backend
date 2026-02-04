@@ -17,7 +17,9 @@ async def get_kanban(
     work_format: str | None = None,
     has_deadline: bool | None = None,
 ) -> KanbanResponse:
-    filters: dict[str, object] = {"status": RequestStatus.ACTIVE.value}
+    filters: dict[str, object] = {
+        "status": {"$in": [RequestStatus.ACTIVE.value, RequestStatus.ON_HOLD.value]},
+    }
     if role:
         filters["vacancy.role"] = role
     if grade:
@@ -85,6 +87,7 @@ async def get_kanban(
             {
                 "id": request_id,
                 "name": request.get("name"),
+                "status": request.get("status"),
                 "application_deadline": vacancy.get("application_deadline"),
                 "updated_at": request.get("updated_at"),
                 "responses_by_stage": {
