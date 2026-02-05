@@ -80,6 +80,7 @@ class RequestMetaTelegram(BaseModel):
     channel_id: int | None = None
     chat_id: int | None = None
     message_id: int | None = None
+    message_link: str | None = None
 
 
 class RequestMeta(BaseModel):
@@ -137,7 +138,7 @@ class RequestDetailResponse(BaseModel):
 
 class RequestPatchPayload(BaseModel):
     status: RequestStatus | None = None
-    name: str | None = None
+    name: str | None = Field(default=None, max_length=150)
 
     @model_validator(mode="after")
     def validate_payload(self) -> "RequestPatchPayload":

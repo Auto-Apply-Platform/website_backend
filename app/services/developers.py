@@ -13,6 +13,7 @@ from bson import ObjectId
 from redis.asyncio import Redis
 
 from app.repositories.developer import DeveloperRepository
+from app.repositories.audit_event import AuditEventRepository
 from app.schemas.developer import (
     DeveloperInDB,
     DeveloperListItem,
@@ -199,6 +200,7 @@ async def update_developer(
     if not ObjectId.is_valid(developer_id):
         raise HTTPException(status_code=400, detail="Некорректный идентификатор")
     repo = DeveloperRepository(db)
+    audit_repo = AuditEventRepository(db)
     developer = await repo.get_by_id(developer_id)
     if not developer:
         raise HTTPException(status_code=404, detail="Разработчик не найден")
@@ -207,7 +209,8 @@ async def update_developer(
         update_data["grade"] = update_data["grade"].strip().lower()
     if "work_format" in update_data and isinstance(update_data["work_format"], str):
         update_data["work_format"] = update_data["work_format"].strip().lower()
-    update_data["updated_at"] = datetime.now(timezone.utc)
+    now = datetime.now(timezone.utc)
+    update_data["updated_at"] = now
     if "role" in update_data and update_data["role"] is not None:
         role_value = str(update_data["role"])
         exists = await role_exists(db, name=role_value)
@@ -230,13 +233,25 @@ async def update_developer(
             "meta": {
                 "developer_id": developer_id,
             },
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": now.isoformat(),
         }
         redis = Redis.from_url(settings.redis_url, decode_responses=True)
         try:
             await redis.rpush(QUEUE_RESUME_INGEST, json.dumps(task))
         finally:
             await redis.close()
+        await audit_repo.create(
+            {
+                "entity_type": "developer",
+                "entity_id": developer_id,
+                "action": "developer_rematch_requested",
+                "payload_json": {
+                    "action": "match_only",
+                    "parsing_status": parsed.parsing_status,
+                },
+                "created_at": now,
+            }
+        )
     return parsed
 
 
@@ -274,9 +289,11 @@ async def delete_developer(
     if not ObjectId.is_valid(developer_id):
         raise HTTPException(status_code=400, detail="Некорректный идентификатор")
     repo = DeveloperRepository(db)
+    audit_repo = AuditEventRepository(db)
     developer = await repo.get_by_id(developer_id)
     if not developer:
         raise HTTPException(status_code=404, detail="Разработчик не найден")
+    now = datetime.now(timezone.utc)
     try:
         delete_upload(
             developer.get("resume_path"),
@@ -288,6 +305,27 @@ async def delete_developer(
             detail="Не удалось удалить файл резюме",
         ) from exc
 
+    responses_result = await db["responses"].delete_many(
+        {"developer_id": developer_id}
+    )
+    candidates_result = await db["candidates"].delete_many(
+        {"developer_id": developer_id}
+    )
+
     deleted = await repo.delete_by_id(developer_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Разработчик не найден")
+
+    await audit_repo.create(
+        {
+            "entity_type": "developer",
+            "entity_id": developer_id,
+            "action": "developer_deleted",
+            "payload_json": {
+                "responses_deleted": responses_result.deleted_count,
+                "candidates_deleted": candidates_result.deleted_count,
+                "resume_path": developer.get("resume_path"),
+            },
+            "created_at": now,
+        }
+    )

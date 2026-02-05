@@ -10,6 +10,7 @@ from app.api.router import api_router
 from app.repositories.candidate import CandidateRepository
 from app.repositories.response import ResponseRepository
 from app.repositories.role import RoleRepository
+from app.repositories.request import RequestRepository
 from app.clients.mongo import mongo_client
 from app.core.config import settings
 from app.repositories.telegram_login_session import (
@@ -49,6 +50,8 @@ async def startup() -> None:
     await response_repo.ensure_indexes()
     candidate_repo = CandidateRepository(db)
     await candidate_repo.ensure_indexes()
+    request_repo = RequestRepository(db)
+    await request_repo.ensure_indexes()
 
 
 @app.exception_handler(StarletteHTTPException)
@@ -81,6 +84,8 @@ async def validation_exception_handler(
         error_type = error.get("type", "")
         if error_type == "missing":
             msg = "Поле обязательно"
+        elif error_type == "string_too_long":
+            msg = "name не может быть длиннее 150 символов"
         else:
             msg = "Некорректное значение"
         translated.append(

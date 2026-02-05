@@ -8,7 +8,13 @@ from fastapi import HTTPException
 
 from app.repositories.role import RoleRepository
 from pymongo.errors import DuplicateKeyError
-from app.schemas.role import RoleCreate, RoleDeleteResponse, RoleInDB, RoleListResponse
+from app.schemas.role import (
+    RoleDeleteResponse,
+    RoleInDB,
+    RoleListResponse,
+    RolesCreatePayload,
+    RolesCreateResponse,
+)
 from app.utils.mongo import serialize_document
 
 
@@ -41,23 +47,37 @@ async def role_exists(
     return existing is not None
 
 
-async def create_role(
+async def create_roles(
     db: AsyncIOMotorDatabase,
     *,
-    payload: RoleCreate,
-) -> RoleInDB:
-    name = payload.name.strip()
-    if not name:
-        raise HTTPException(status_code=422, detail="Название роли не должно быть пустым")
+    payload: RolesCreatePayload,
+) -> RolesCreateResponse:
+    if not payload.roles:
+        raise HTTPException(status_code=422, detail="Список ролей пустой")
+    normalized: list[str] = []
+    for item in payload.roles:
+        if not isinstance(item, str):
+            raise HTTPException(status_code=422, detail="Название роли должно быть строкой")
+        name = item.strip()
+        if not name:
+            raise HTTPException(status_code=422, detail="Название роли не должно быть пустым")
+        if len(name) > 60:
+            raise HTTPException(
+                status_code=422,
+                detail="Название роли не должно быть длиннее 60 символов",
+            )
+        normalized.append(name)
+
+    unique = list(dict.fromkeys(normalized))
     repo = RoleRepository(db)
-    existing = await repo.get_by_name(name)
-    if existing:
-        raise HTTPException(status_code=409, detail="Роль уже существует")
-    try:
-        created = await repo.create({"name": name, "created_at": datetime.utcnow()})
-    except DuplicateKeyError as exc:
-        raise HTTPException(status_code=409, detail="Роль уже существует") from exc
-    return RoleInDB.model_validate(created)
+    created_names: list[str] = []
+    for name in unique:
+        try:
+            await repo.create({"name": name, "created_at": datetime.utcnow()})
+            created_names.append(name)
+        except DuplicateKeyError:
+            continue
+    return RolesCreateResponse(roles=created_names)
 
 
 async def delete_role(

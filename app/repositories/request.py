@@ -5,6 +5,36 @@ from app.repositories.base import BaseRepository
 class RequestRepository(BaseRepository):
     collection_name = REQUESTS_COLLECTION
 
+    async def ensure_indexes(self) -> None:
+        validator = {
+            "$jsonSchema": {
+                "bsonType": "object",
+                "properties": {
+                    "name": {
+                        "bsonType": ["string", "null"],
+                        "maxLength": 150,
+                    }
+                },
+            }
+        }
+        try:
+            await self._collection.database.command(
+                {
+                    "collMod": self.collection_name,
+                    "validator": validator,
+                    "validationLevel": "moderate",
+                }
+            )
+        except Exception:
+            try:
+                await self._collection.database.create_collection(
+                    self.collection_name,
+                    validator=validator,
+                    validationLevel="moderate",
+                )
+            except Exception:
+                pass
+
     async def get_request_by_id(self, request_id: str) -> dict | None:
         return await self.get_by_id(request_id)
 

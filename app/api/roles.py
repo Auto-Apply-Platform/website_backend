@@ -5,8 +5,14 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
 
 from app.dependencies import get_db
-from app.schemas.role import RoleCreate, RoleDeleteResponse, RoleInDB, RoleListResponse
-from app.services.roles import create_role, delete_role, list_roles
+from app.schemas.role import (
+    RoleDeleteResponse,
+    RoleInDB,
+    RoleListResponse,
+    RolesCreatePayload,
+    RolesCreateResponse,
+)
+from app.services.roles import create_roles, delete_role, list_roles
 
 router = APIRouter(prefix="/roles", tags=["roles"])
 
@@ -19,12 +25,12 @@ async def get_roles(
     return await list_roles(db, q=q)
 
 
-@router.post("", response_model=RoleInDB, status_code=201)
+@router.post("", response_model=RolesCreateResponse, status_code=201)
 async def post_role(
-    payload: RoleCreate,
+    payload: RolesCreatePayload,
     db: AsyncIOMotorDatabase = Depends(get_db),
-) -> RoleInDB:
-    return await create_role(db, payload=payload)
+) -> RolesCreateResponse:
+    return await create_roles(db, payload=payload)
 
 
 @router.delete("/{role_id}", response_model=RoleDeleteResponse)

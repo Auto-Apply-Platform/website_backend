@@ -3,8 +3,8 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 
-class RoleCreate(BaseModel):
-    name: str
+class RolesCreatePayload(BaseModel):
+    roles: list[str]
 
 
 class RoleInDB(BaseModel):
@@ -15,6 +15,10 @@ class RoleInDB(BaseModel):
 
 class RoleListResponse(BaseModel):
     items: list[RoleInDB]
+
+
+class RolesCreateResponse(BaseModel):
+    roles: list[str]
 
 
 class RoleDeleteResponse(BaseModel):
