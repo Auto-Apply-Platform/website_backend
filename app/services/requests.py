@@ -14,6 +14,7 @@ from app.schemas.request import (
     RequestDetailResponse,
     RequestInDB,
 )
+from app.schemas.request_status import RequestStatus
 from app.schemas.response_stage import ResponseStage
 from app.utils.mongo import serialize_document
 
@@ -53,6 +54,8 @@ async def get_request_by_id(
     request_id: str,
 ) -> RequestDetailResponse:
     repo = RequestRepository(db)
+    if not ObjectId.is_valid(request_id):
+        raise HTTPException(status_code=400, detail="Некорректный идентификатор")
     request = await repo.get_request_by_id(request_id)
     if not request:
         raise HTTPException(status_code=404, detail="Заявка не найдена")
@@ -141,6 +144,8 @@ async def update_request(
 ) -> RequestDetailResponse:
     repo = RequestRepository(db)
     audit_repo = AuditEventRepository(db)
+    if not ObjectId.is_valid(request_id):
+        raise HTTPException(status_code=400, detail="Некорректный идентификатор")
     request = await repo.get_by_id(request_id)
     if not request:
         raise HTTPException(status_code=404, detail="Заявка не найдена")
@@ -162,6 +167,7 @@ async def update_request(
     if not updated:
         raise HTTPException(status_code=404, detail="Заявка не найдена")
     if status_value is not None:
+        next_status = status_value
         await audit_repo.create(
             {
                 "entity_type": "request",
@@ -169,7 +175,7 @@ async def update_request(
                 "action": "request_status_changed",
                 "payload_json": {
                     "from": current_status.value if current_status else None,
-                    "to": status_value.value,
+                    "to": next_status.value,
                 },
                 "created_at": datetime.now(timezone.utc),
             }

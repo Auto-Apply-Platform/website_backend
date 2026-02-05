@@ -91,6 +91,9 @@ async def update_response(
     audit_repo = AuditEventRepository(db)
     now = datetime.now(timezone.utc)
 
+    if not ObjectId.is_valid(response_id):
+        raise HTTPException(status_code=400, detail="Некорректный идентификатор")
+
     response = await repo.get_by_id(response_id)
     if not response:
         raise HTTPException(status_code=404, detail="Отклик не найден")
@@ -150,6 +153,9 @@ async def delete_response(
     audit_repo = AuditEventRepository(db)
     now = datetime.now(timezone.utc)
 
+    if not ObjectId.is_valid(response_id):
+        raise HTTPException(status_code=400, detail="Некорректный идентификатор")
+
     response = await repo.get_by_id(response_id)
     if not response:
         raise HTTPException(status_code=404, detail="Отклик не найден")
@@ -177,6 +183,8 @@ async def get_response_detail(
     response_id: str,
 ) -> ResponseDetailResponse:
     repo = ResponseRepository(db)
+    if not ObjectId.is_valid(response_id):
+        raise HTTPException(status_code=400, detail="Некорректный идентификатор")
     response = await repo.get_by_id(response_id)
     if not response:
         raise HTTPException(status_code=404, detail="Отклик не найден")
@@ -213,7 +221,6 @@ async def get_response_detail(
             "id": request_id,
             "name": request.get("name"),
             "raw_text": request.get("raw_text"),
-            "vacancy": request.get("vacancy"),
             "meta": request.get("meta"),
         },
         candidate=(

@@ -109,7 +109,7 @@ class RequestCandidateDeveloper(BaseModel):
 class RequestCandidateItem(BaseModel):
     developer: RequestCandidateDeveloper
     score: float | None = None
-    description: str | None = None
+    description: dict | None = None
     already_assigned: bool = False
 
 

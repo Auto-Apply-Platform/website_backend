@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, model_validator
 
 from app.schemas.response_stage import ResponseStage
-from app.schemas.request import RequestMeta, RequestVacancy
+from app.schemas.request import RequestMeta
 
 
 class ResponseCreatePayload(BaseModel):
@@ -42,13 +42,12 @@ class ResponseRequest(BaseModel):
     id: str
     name: str | None = None
     raw_text: str | None = None
-    vacancy: RequestVacancy | None = None
     meta: RequestMeta | None = None
 
 
 class ResponseCandidate(BaseModel):
     score: float | None = None
-    description: str | None = None
+    description: dict | None = None
 
 
 class ResponseDetailResponse(BaseModel):
