@@ -12,6 +12,7 @@ class KanbanResponseItem(BaseModel):
     rate: str | None = None
     developer_role: str | None = None
     updated_at: datetime | None = None
+    allowed_stages: list[ResponseStage] = Field(default_factory=list)
 
 
 class KanbanRequestItem(BaseModel):

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from app.schemas.response_stage import ResponseStage
 from app.schemas.request import RequestMeta
@@ -29,8 +29,13 @@ class ResponseInDB(BaseModel):
     developer_id: str
     rate: str | None = None
     stage: ResponseStage
+    max_stage: int | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
+
+
+class ResponseWithAllowed(ResponseInDB):
+    allowed_stages: list[ResponseStage] = Field(default_factory=list)
 
 
 class ResponseDeveloper(BaseModel):

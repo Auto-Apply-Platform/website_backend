@@ -16,6 +16,7 @@ from app.schemas.response import (
     ResponseInDB,
 )
 from app.schemas.response_stage import ResponseStage
+from app.utils.response_stage import STAGE_INDEX, STAGE_ORDER, allowed_stages, can_transition
 from app.utils.mongo import serialize_document
 
 
@@ -53,6 +54,7 @@ async def create_response(
         "developer_id": payload.developer_id,
         "rate": payload.rate,
         "stage": ResponseStage.NEW.value,
+        "max_stage": 1,
         "created_at": now,
         "updated_at": now,
     }
@@ -104,9 +106,22 @@ async def update_response(
         ResponseStage(current_stage_raw) if isinstance(current_stage_raw, str) else None
     )
     current_rate = response.get("rate")
+    current_max_stage = response.get("max_stage")
+    max_stage_value = int(current_max_stage) if isinstance(current_max_stage, int) else 1
+
+    stage_order = STAGE_ORDER
+    stage_index = STAGE_INDEX
 
     if stage is not None:
+        can_move, next_max_stage = can_transition(
+            current_stage,
+            stage,
+            max_stage_value,
+        )
+        if not can_move:
+            raise HTTPException(status_code=409, detail="Недопустимый переход стадии")
         update_payload["stage"] = stage.value
+        update_payload["max_stage"] = next_max_stage
     if rate is not None:
         update_payload["rate"] = rate
 
@@ -141,7 +156,12 @@ async def update_response(
             }
         )
 
-    return ResponseInDB.model_validate(updated)
+    response_model = ResponseInDB.model_validate(updated)
+    allowed = allowed_stages(
+        ResponseStage(response_model.stage) if response_model.stage else None,
+        response_model.max_stage or max_stage_value,
+    )
+    return {**response_model.model_dump(), "allowed_stages": allowed}
 
 
 async def delete_response(

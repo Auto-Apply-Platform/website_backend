@@ -6,6 +6,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.schemas.kanban import KanbanResponse
 from app.schemas.request_status import RequestStatus
 from app.schemas.response_stage import ResponseStage
+from app.utils.response_stage import STAGE_INDEX, STAGE_ORDER, allowed_stages
 from app.utils.mongo import serialize_document
 
 
@@ -98,6 +99,8 @@ async def get_kanban(
         )
 
     requests_index = {item["id"]: item for item in requests_payload}
+
+    stage_index = STAGE_INDEX
     for response in responses:
         request_id = response.get("request_id") or ""
         request_item = requests_index.get(request_id)
@@ -118,6 +121,10 @@ async def get_kanban(
                 "rate": response.get("rate"),
                 "developer_role": developer.get("role"),
                 "updated_at": response.get("updated_at"),
+                "allowed_stages": allowed_stages(
+                    stage,
+                    int(response.get("max_stage") or stage_index.get(stage, 1)),
+                ),
             }
         )
 

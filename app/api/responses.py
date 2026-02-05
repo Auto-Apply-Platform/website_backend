@@ -9,6 +9,7 @@ from app.schemas.response import (
     ResponseDetailResponse,
     ResponseInDB,
     ResponsePatchPayload,
+    ResponseWithAllowed,
 )
 from app.services.responses import (
     create_response,
@@ -28,12 +29,12 @@ async def post_response(
     return await create_response(db, payload=payload)
 
 
-@router.patch("/{response_id}", response_model=ResponseInDB)
+@router.patch("/{response_id}", response_model=ResponseWithAllowed)
 async def patch_response(
     response_id: str,
     payload: ResponsePatchPayload,
     db: AsyncIOMotorDatabase = Depends(get_db),
-) -> ResponseInDB:
+) -> ResponseWithAllowed:
     return await update_response(
         db,
         response_id=response_id,
