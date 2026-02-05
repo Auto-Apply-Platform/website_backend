@@ -1,0 +1,61 @@
+image: docker:latest
+
+services:
+  - docker:dind
+
+stages:
+  - build
+  - deploy
+  - stop
+
+variables:
+  DOCKER_TLS_CERTDIR: "/certs"
+
+build:
+  stage: build
+  before_script:
+    - docker info
+    - echo "$CI_JOB_TOKEN" | docker login $CI_REGISTRY --username gitlab-ci-token --password-stdin
+  variables:
+    DOCKER_BUILDKIT: '1'
+    CI_REGISTRY_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH/app
+  script:
+    - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG || true
+    - docker build --cache-from $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG --build-arg BUILDKIT_INLINE_CACHE=1 .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+
+
+deploy-to-prod:
+  stage: deploy
+  allow_failure: false
+  needs:
+    - build
+  script:
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+    - docker-compose pull --ignore-pull-failures --include-deps
+    - docker-compose up -d
+  environment:
+    name: Production
+    on_stop: stop-prod
+  only:
+    - main
+  tags:
+    - staff-prod
+
+
+stop-prod:
+  stage: stop
+  allow_failure: true
+  when: manual
+  needs:
+    - deploy-to-prod
+  script:
+    - docker-compose down
+  environment:
+    name: Production
+    action: stop
+  only:
+    - main
+  tags:
+    - staff-prod
