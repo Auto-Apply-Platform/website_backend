@@ -11,10 +11,19 @@ services:
     image: $CI_REGISTRY/$CI_PROJECT_PATH/app:$CI_COMMIT_SHORT_SHA
     build:
       context: .
-      args:
-        VITE_TELEGRAM_BOT_USERNAME: $VITE_TELEGRAM_BOT_USERNAME
-        VITE_API_URL: $VITE_API_URL
     restart: always
+    environment:
+      APP_NAME: website_backend
+      MONGODB_URI: mongodb://mongo:27017
+      MONGODB_DB: website_backend
+      REDIS_URL: redis://redis:6379/0
+      AUTH_JWT_SECRET: $AUTH_JWT_SECRET
+      AUTH_JWT_ALG: HS256
+      ACCESS_TOKEN_EXPIRES_SECONDS: $ACCESS_TOKEN_EXPIRES_SECONDS
+      LOGIN_TOKEN_TTL_SECONDS: $LOGIN_TOKEN_TTL_SECONDS
+      TELEGRAM_BOT_USERNAME: $TELEGRAM_BOT_USERNAME
+      TELEGRAM_BOT_SECRET: $TELEGRAM_BOT_SECRET
+
     networks:
       - reverse-public
       - reqbot
