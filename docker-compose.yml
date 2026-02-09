@@ -36,7 +36,7 @@ services:
       - traefik.http.routers.reqbot-api.service=reqbot-api
       - traefik.http.routers.reqbot-api.tls=true
       - traefik.http.routers.reqbot-api.tls.certresolver=default
-      - traefik.http.services.reqbot-api.loadbalancer.server.port=5000
+      - traefik.http.services.reqbot-api.loadbalancer.server.port=8081
       - traefik.http.services.reqbot-api.loadbalancer.server.scheme=http
 
   mongo:
