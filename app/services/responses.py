@@ -41,6 +41,8 @@ async def create_response(
     developer = await db["developers"].find_one({"_id": developer_object_id})
     if not developer:
         raise HTTPException(status_code=404, detail="Разработчик не найден")
+    if developer.get("status") == "занят":
+        raise HTTPException(status_code=422, detail="Разработчик занят")
 
     existing = await repo.get_by_request_developer(
         payload.request_id,
@@ -53,8 +55,8 @@ async def create_response(
         "request_id": payload.request_id,
         "developer_id": payload.developer_id,
         "rate": payload.rate,
-        "stage": ResponseStage.NEW.value,
-        "max_stage": 1,
+        "stage": ResponseStage.CV_SELECTED.value,
+        "max_stage": STAGE_INDEX[ResponseStage.CV_SELECTED],
         "created_at": now,
         "updated_at": now,
     }
@@ -73,7 +75,7 @@ async def create_response(
                 "request_id": payload.request_id,
                 "developer_id": payload.developer_id,
                 "rate": payload.rate,
-                "stage": ResponseStage.NEW.value,
+                "stage": ResponseStage.CV_SELECTED.value,
             },
             "created_at": now,
         }
@@ -102,9 +104,13 @@ async def update_response(
 
     update_payload: dict[str, object] = {"updated_at": now}
     current_stage_raw = response.get("stage")
-    current_stage = (
-        ResponseStage(current_stage_raw) if isinstance(current_stage_raw, str) else None
-    )
+    if isinstance(current_stage_raw, str):
+        try:
+            current_stage = ResponseStage(current_stage_raw)
+        except ValueError:
+            current_stage = ResponseStage.CV_SELECTED
+    else:
+        current_stage = None
     current_rate = response.get("rate")
     current_max_stage = response.get("max_stage")
     max_stage_value = int(current_max_stage) if isinstance(current_max_stage, int) else 1
@@ -156,6 +162,12 @@ async def update_response(
             }
         )
 
+    stage_raw = updated.get("stage")
+    if isinstance(stage_raw, str):
+        try:
+            ResponseStage(stage_raw)
+        except ValueError:
+            updated["stage"] = ResponseStage.CV_SELECTED.value
     response_model = ResponseInDB.model_validate(updated)
     allowed = allowed_stages(
         ResponseStage(response_model.stage) if response_model.stage else None,
@@ -230,7 +242,14 @@ async def get_response_detail(
         {"request_id": request_id, "developer_id": developer_id}
     )
 
-    response_model = ResponseInDB.model_validate(serialize_document(response))
+    response_doc = serialize_document(response)
+    stage_raw = response_doc.get("stage")
+    if isinstance(stage_raw, str):
+        try:
+            ResponseStage(stage_raw)
+        except ValueError:
+            response_doc["stage"] = ResponseStage.CV_SENT.value
+    response_model = ResponseInDB.model_validate(response_doc)
     return ResponseDetailResponse(
         response=response_model,
         developer={

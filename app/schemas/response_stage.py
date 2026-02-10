@@ -2,8 +2,7 @@ from enum import Enum
 
 
 class ResponseStage(str, Enum):
-    NEW = "NEW"
-    CV_SEARCH = "CV_SEARCH"
+    CV_SELECTED = "CV_SELECTED"
     CV_SENT = "CV_SENT"
     DETAILS_CLARIFICATION = "DETAILS_CLARIFICATION"
     CLIENT_REVIEW = "CLIENT_REVIEW"

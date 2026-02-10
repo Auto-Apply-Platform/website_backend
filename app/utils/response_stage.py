@@ -4,8 +4,7 @@ from app.schemas.response_stage import ResponseStage
 
 
 STAGE_ORDER = [
-    ResponseStage.NEW,
-    ResponseStage.CV_SEARCH,
+    ResponseStage.CV_SELECTED,
     ResponseStage.CV_SENT,
     ResponseStage.DETAILS_CLARIFICATION,
     ResponseStage.CLIENT_REVIEW,
@@ -22,12 +21,7 @@ STAGE_ORDER = [
 STAGE_INDEX = {stage: idx + 1 for idx, stage in enumerate(STAGE_ORDER)}
 
 ALLOWED_TRANSITIONS = {
-    ResponseStage.NEW: {
-        ResponseStage.CV_SEARCH,
-        ResponseStage.CANCELLED_BY_US,
-        ResponseStage.REJECTED,
-    },
-    ResponseStage.CV_SEARCH: {
+    ResponseStage.CV_SELECTED: {
         ResponseStage.CV_SENT,
         ResponseStage.CANCELLED_BY_US,
         ResponseStage.REJECTED,

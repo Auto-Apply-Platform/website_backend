@@ -108,11 +108,11 @@ async def get_kanban(
             continue
         developer_id = response.get("developer_id") or ""
         developer = developers_by_id.get(developer_id) or {}
-        stage_value = response.get("stage") or ResponseStage.NEW.value
+        stage_value = response.get("stage") or ResponseStage.CV_SELECTED.value
         try:
             stage = ResponseStage(stage_value)
         except ValueError:
-            stage = ResponseStage.NEW
+            stage = ResponseStage.CV_SELECTED
         request_item["responses_by_stage"][stage].append(
             {
                 "id": response.get("id") or "",

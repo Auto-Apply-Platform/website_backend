@@ -107,9 +107,9 @@ async def get_request_by_id(
     for response in response_docs:
         stage_value = response.get("stage")
         try:
-            stage = ResponseStage(stage_value) if stage_value else ResponseStage.NEW
+            stage = ResponseStage(stage_value) if stage_value else ResponseStage.CV_SELECTED
         except ValueError:
-            stage = ResponseStage.NEW
+            stage = ResponseStage.CV_SELECTED
         responses.append(
             {
                 "id": response.get("id") or "",
