@@ -31,14 +31,26 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title=settings.app_name, lifespan=lifespan)
+
+
+def _parse_cors_origins(raw: str) -> list[str]:
+    origins = [item.strip() for item in raw.split(",")]
+    return [origin for origin in origins if origin]
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=_parse_cors_origins(settings.cors_allow_origins),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 app.include_router(api_router)
+
+
+@app.get("/healthz")
+async def healthz() -> dict[str, bool]:
+    return {"ok": True}
 
 
 @app.on_event("startup")

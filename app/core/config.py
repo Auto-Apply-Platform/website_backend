@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     login_token_ttl_seconds: int = 300
     telegram_bot_username: str = ""
     telegram_bot_secret: str = ""
+    cors_allow_origins: str = "http://localhost:3000"
     admin_username: str | None = None
     admin_password: str | None = None
 
