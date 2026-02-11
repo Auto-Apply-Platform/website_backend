@@ -29,19 +29,17 @@ class DeveloperInDB(BaseModel):
     resume_path: str | None = None
     parsing_status: str | None = None
     created_at: str | None = None
+    updated_at: str | None = None
     full_name: str | None = None
-    main_stack: str | None = None
     role: str | None = None
+    status: str | None = None
     grade: str | None = None
-    grade_raw: str | None = None
     experience_years: float | None = None
     stack: DeveloperStack | None = None
     work_format: str | None = None
-    employment_type: str | None = None
     location: str | None = None
-    salary_expectations: str | None = None
-    education_level: str | None = None
-    additional_information: str | None = None
+    rate: str | None = None
+    resume_text: str | None = None
 
 
 class DeveloperUpdate(BaseModel):
@@ -54,44 +52,23 @@ class DeveloperUpdate(BaseModel):
 
 class DeveloperPatchPayload(BaseModel):
     full_name: str | None = None
-    role: Literal[
-        "Backend Developer",
-        "Frontend Developer",
-        "Fullstack Developer",
-        "Mobile Developer",
-        "Data Engineer",
-        "Data Analyst",
-        "Machine Learning Engineer",
-        "UI/UX designer",
-        "1С разработчик",
-        "Другое",
-    ] | None = None
-    grade: Literal["Junior", "Middle", "Senior"] | None = None
-    grade_raw: str | None = None
+    role: str | None = None
+    status: Literal["занят", "доступен", "нужна ротация"] | None = None
+    grade: Literal["junior", "middle", "senior", "team_lead"] | None = None
     experience_years: float | None = None
     stack: DeveloperStack | None = None
-    work_format: Literal["Remote", "Hybrid", "Office"] | None = None
-    employment_type: str | None = None
+    work_format: Literal["remote", "hybrid", "office"] | None = None
     location: str | None = None
-    salary_expectations: str | None = None
-    education_level: str | None = None
-    additional_information: str | None = None
-
-
-class DeveloperDeletePayload(BaseModel):
-    ids: list[str]
-
-
-class DeveloperDeleteResponse(BaseModel):
-    delete_ids: list[str]
-    not_found_ids: list[str]
-    invalid_ids: list[str]
+    rate: str | None = None
+    resume_text: str | None = None
 
 
 class DeveloperListItem(BaseModel):
     id: str
     full_name: str
     role: str
+    status: str | None = None
+    rate: str | None = None
     stack: DeveloperStack
     experience: float
     parsing_status: str
@@ -105,3 +82,7 @@ class DeveloperListResponse(BaseModel):
     total: int
     page: int
     size: int
+
+
+class DeveloperOptionsResponse(BaseModel):
+    options: list[str]

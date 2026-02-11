@@ -13,8 +13,6 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.consts import DEFAULT_PAGE_SIZE
 from app.dependencies import get_db
 from app.schemas.developer import (
-    DeveloperDeletePayload,
-    DeveloperDeleteResponse,
     DeveloperInDB,
     DeveloperListResponse,
     DeveloperPatchPayload,
@@ -23,7 +21,6 @@ from app.schemas.developer import (
 from app.services.developers import (
     create_developer as create_developer_service,
     delete_developer as delete_developer_service,
-    delete_developers as delete_developers_service,
     get_developer_by_id,
     get_developer_resume,
     list_developers as list_developers_service,
@@ -56,6 +53,10 @@ async def list_developers(
         grade=grade,
         work_format=work_format,
     )
+
+
+
+
 
 
 @router.post("", response_model=DeveloperUploadResponse, status_code=201)
@@ -104,17 +105,6 @@ async def download_resume(
     db: AsyncIOMotorDatabase = Depends(get_db),
 ) -> FileResponse:
     return await get_developer_resume(db, developer_id=developer_id)
-
-
-@router.post("/delete", response_model=DeveloperDeleteResponse)
-async def delete_developers(
-    payload: DeveloperDeletePayload,
-    db: AsyncIOMotorDatabase = Depends(get_db),
-) -> DeveloperDeleteResponse:
-    return await delete_developers_service(
-        db,
-        payload=payload,
-    )
 
 
 @router.delete("/{developer_id}", status_code=204)

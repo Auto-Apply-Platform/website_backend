@@ -2,16 +2,8 @@ from enum import Enum
 
 
 class RequestStatus(str, Enum):
-    NEW = "NEW"
-    CV_SEARCH = "CV_SEARCH"
-    CV_SENT = "CV_SENT"
-    DETAILS_CLARIFICATION = "DETAILS_CLARIFICATION"
-    CLIENT_REVIEW = "CLIENT_REVIEW"
-    PRECHECK = "PRECHECK"
-    INTERVIEW_1 = "INTERVIEW_1"
-    INTERVIEW_2 = "INTERVIEW_2"
-    INTERVIEW_3 = "INTERVIEW_3"
-    WAIT_DECISION = "WAIT_DECISION"
-    ON_PROJECT = "ON_PROJECT"
-    CANCELLED_BY_US = "CANCELLED_BY_US"
-    REJECTED = "REJECTED"
+    ACTIVE = "active"
+    ON_HOLD = "on_hold"
+    ON_PROJECT = "on_project"
+    CANCELED_BY_US = "canceled_by_us"
+    REJECTED = "rejected"

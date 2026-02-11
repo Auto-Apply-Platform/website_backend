@@ -8,15 +8,15 @@ from bson import ObjectId
 
 from app.schemas.request import (
     RequestDeleteResponse,
+    RequestDetailResponse,
     RequestInDB,
-    RequestStatusPatch,
-    RequestStatusResponse,
+    RequestPatchPayload,
 )
 from app.services.requests import (
     delete_request_by_id,
     get_request_by_id,
     list_requests as list_requests_service,
-    update_request_status,
+    update_request,
 )
 
 router = APIRouter(prefix="/requests", tags=["requests"])
@@ -39,11 +39,11 @@ async def list_requests(
     )
 
 
-@router.get("/{request_id}", response_model=RequestInDB)
+@router.get("/{request_id}", response_model=RequestDetailResponse)
 async def get_request(
     request_id: str,
     db: AsyncIOMotorDatabase = Depends(get_db),
-) -> RequestInDB:
+) -> RequestDetailResponse:
     return await get_request_by_id(db, request_id=request_id)
 
 
@@ -62,23 +62,22 @@ async def delete_request(
 
 @router.patch(
     "/{request_id}",
-    response_model=RequestStatusResponse,
-    summary="Обновление статуса заявки",
-    description="Обновляет status и/или on_hold с проверкой допустимого перехода",
+    response_model=RequestDetailResponse,
+    summary="Обновление заявки",
+    description="Обновляет status и/или name",
     responses={
         status.HTTP_404_NOT_FOUND: {"description": "Заявка не найдена"},
-        status.HTTP_409_CONFLICT: {"description": "Недопустимый переход статуса"},
         status.HTTP_422_UNPROCESSABLE_ENTITY: {"description": "Некорректное тело запроса"},
     },
 )
 async def patch_request(
     request_id: str,
-    payload: RequestStatusPatch,
+    payload: RequestPatchPayload,
     db: AsyncIOMotorDatabase = Depends(get_db),
-) -> dict:
-    return await update_request_status(
+) -> RequestDetailResponse:
+    return await update_request(
         db,
         request_id=request_id,
         status_value=payload.status,
-        on_hold=payload.on_hold,
+        name=payload.name,
     )
