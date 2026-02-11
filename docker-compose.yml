@@ -23,6 +23,7 @@ services:
       LOGIN_TOKEN_TTL_SECONDS: 300
       TELEGRAM_BOT_USERNAME: $TELEGRAM_BOT_USERNAME
       TELEGRAM_BOT_SECRET: $TELEGRAM_BOT_SECRET
+      CORS_ALLOW_ORIGINS: https://reqbot.iqdev.team
 
     networks:
       - reverse-public
